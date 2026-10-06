@@ -1,5 +1,6 @@
 import time
 import math
+import multiprocessing as mp
 import numpy as np
 
 def process_chunk(data_chunk):
@@ -18,3 +19,13 @@ def run_sequential(data):
     result = process_chunk(data)
     end = time.perf_counter()
     return end - start, result
+
+def run_parallel(data, num_workers):
+    chunk_size = len(data) // num_workers
+    chunks = [data[i * chunk_size:(i + 1) * chunk_size] for i in range(num_workers - 1)]
+    chunks.append(data[(num_workers - 1) * chunk_size:])
+    start = time.perf_counter()
+    with mp.Pool(processes=num_workers) as pool:
+        results = pool.map(process_chunk, chunks)
+    end = time.perf_counter()
+    return end - start, sum(results)
