@@ -64,7 +64,7 @@ La ejecución completa tarda aproximadamente **2–3 minutos**. Al finalizar se 
 
 **No.** De 1 → 2 workers el Speedup fue **1.88** (no 2.0) y de 1 → 4 workers fue **3.34** (no 4.0); la eficiencia cayó de 100 % → 93.81 % → 83.59 %.
 
-Por la **Ley de Amdahl**, $S(p) = \frac{1}{s + (1-s)/p}$, con $p = 4$ y $S = 3.3435$ la fracción serial estimada es $s \approx 6.5\%$; con $p = 2$ el ajuste da $s \approx 6.6\%$ (consistente). Esa porción no paralelizable —generar el vector, dividirlo, lanzar el `Pool` y sumar los parciales— limita el rendimiento máximo. A esto se suma el **overhead de `multiprocessing`**: crear los procesos, copiar/serializar cada bloque por el *pipe* (pickle) y devolver los resultados por IPC. Por eso duplicar procesos nunca duplica el rendimiento.
+Por la **Ley de Amdahl**, $S(p) = \frac{1}{s + (1-s)/p}$, con $p = 4$ y $S = 3.3435$ la fracción serial estimada es $s \approx 6.5\%$; con $p = 2$ el ajuste da $s \approx 6.6\%$ (consistente). Esa porción no paralelizable —lanzar el `Pool`, copiar los bloques a cada proceso y sumar los parciales (generar el vector y dividirlo ocurren antes de iniciar la medición, así que no cuentan)— limita el rendimiento máximo. A esto se suma el **overhead de `multiprocessing`**: crear los procesos, copiar/serializar cada bloque por el *pipe* (pickle) y devolver los resultados por IPC. Por eso duplicar procesos nunca duplica el rendimiento.
 
 ### ¿Por qué el problema seleccionado puede paralelizarse?
 
@@ -78,7 +78,7 @@ Cuando el **overhead marginal supera la ganancia de cómputo**. Señales observa
 2. Al superar los **8 núcleos físicos** los procesos compiten por CPU e hiperhilos, con contención de la caché L3 compartida (16 MiB).
 3. Cuando el chunk de trabajo se hace pequeño respecto al costo de crear el proceso y copiar los datos, el speedup se estanca o invierte.
 
-En este experimento, con 8 workers la curva ya estaría en zona de rendimientos decrecientes; con 4 aún conviene porque el cómputo (~10.9 s secuenciales) domina sobre el overhead (~0.5 s).
+En este experimento, con 8 workers la curva ya estaría en zona de rendimientos decrecientes; con 4 aún conviene porque el cómputo (~10.9 s secuenciales) domina sobre el overhead (~1.1 s: 11.97 s con 1 worker contra 10.89 s secuencial).
 
 ### ¿Qué limitaciones tiene el hardware utilizado?
 
