@@ -21,9 +21,7 @@ def run_sequential(data):
     return end - start, result
 
 def run_parallel(data, num_workers):
-    chunk_size = len(data) // num_workers
-    chunks = [data[i * chunk_size:(i + 1) * chunk_size] for i in range(num_workers - 1)]
-    chunks.append(data[(num_workers - 1) * chunk_size:])
+    chunks = np.array_split(data, num_workers)
     start = time.perf_counter()
     with mp.Pool(processes=num_workers) as pool:
         results = pool.map(process_chunk, chunks)
